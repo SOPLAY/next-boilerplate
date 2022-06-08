@@ -5,7 +5,6 @@ import { MenuIcon, XIcon } from '@heroicons/react/outline';
 const Navbar = () => {
   const { data, status } = useSession();
   let text = '';
-  console.log(data, status);
   if (status === 'authenticated') text = `${data.user?.name}님 환영합니다.`;
   const loginMenu: TypeNavMenu[] =
     status === 'authenticated'
