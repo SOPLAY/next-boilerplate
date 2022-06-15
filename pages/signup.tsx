@@ -47,10 +47,11 @@ const SignUp: NextPage = () => {
         .post('/api/auth/signup', data)
         .then((res) => {
           setFromStatus(`Sign up Success : ${res.data.message}`);
+          router.replace('/login');
         })
         .catch((err) => {
           console.log(err.response);
-          setFromStatus(`Error Occured : ${err.response.data}`);
+          setFromStatus(`Error Occured : ${err.response.data.message}`);
           throw new Error(err.response.data.message || '무언가 잘못 됬어요!!!');
         });
     } catch (err) {
@@ -59,7 +60,7 @@ const SignUp: NextPage = () => {
   };
 
   return (
-    <div className=" h-screen overflow-hidden w-full">
+    <div className=" h-full w-full">
       <div className="flex flex-col items-center">
         <h1 className="my-20 mt-36 text-5xl font-bold text-gray-700">
           Sign Up

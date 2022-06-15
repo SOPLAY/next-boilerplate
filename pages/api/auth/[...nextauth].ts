@@ -1,17 +1,19 @@
+import { PrismaClient } from '@prisma/client';
 import nextAuth from 'next-auth';
-import Credentials from 'next-auth/providers/credentials';
+import CredentialsProvider from 'next-auth/providers/credentials';
+import { verifyPassword } from '../../../lib/auth';
 
 export default nextAuth({
   providers: [
-    Credentials({
+    CredentialsProvider({
       // The name to display on the sign in form (e.g. "Sign in with...")
-      name: '이메일, 패스워드 방식',
+      name: 'Credentials',
       // The credentials is used to generate a suitable form on the sign in page.
       // You can specify whatever fields you are expecting to be submitted.
       // e.g. domain, username, password, 2FA token, etc.
       // You can pass any HTML attribute to the <input> tag through the object.
       credentials: {
-        useremail: {
+        email: {
           label: '이메일',
           type: 'email',
           placeholder: 'test@gmail.com',
@@ -22,22 +24,25 @@ export default nextAuth({
       //인증 부분
       async authorize(credentials, req) {
         // Add logic here to look up the user from the credentials supplied
-        // const user = { id: 1, name: 'J Smith', email: 'jsmith@example.com' };
-
-        if (
-          credentials?.useremail === 'test@gmail.com' &&
-          credentials.password === '1q2w3e4r!'
-        ) {
-          const user = { id: 1, name: 'test', email: credentials.useremail };
-          // Any object returned will be saved in `user` property of the JWT
-
-          return user;
-        } else {
-          // If you return null then an error will be displayed advising the user to check their details.
-          return null;
-
-          // You can also Reject this callback with an Error thus the user will be sent to the error page with the error message as a query parameter
+        //프리즈마 연결
+        let prisma = new PrismaClient();
+        const user = await prisma.user.findUnique({
+          where: { email: credentials?.email },
+          select: { name: true, email: true, password: true },
+        });
+        if (!user) {
+          throw new Error('No user found');
         }
+
+        const isValid = await verifyPassword(
+          String(credentials?.password),
+          user.password
+        );
+
+        if (!isValid) {
+          throw new Error('Could not log you in!');
+        }
+        return { name: user.name, email: user.email };
       },
     }),
   ],
